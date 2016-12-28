@@ -34,7 +34,6 @@
             // 
             // timUpdate
             // 
-            this.timUpdate.Enabled = true;
             this.timUpdate.Interval = 16;
             this.timUpdate.Tick += new System.EventHandler(this.timUpdate_Tick);
             // 
@@ -49,7 +48,8 @@
             this.Name = "frmMain";
             this.Text = "Gravity";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            this.Click += new System.EventHandler(this.frmMain_Click);
+            this.Load += new System.EventHandler(this.frmMain_Load);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.frmMain_Paint);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.frmMain_KeyDown);
             this.ResumeLayout(false);
 
