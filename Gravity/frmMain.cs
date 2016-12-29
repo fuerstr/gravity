@@ -33,7 +33,7 @@ namespace Gravity
         {
             Cursor.Hide();
 
-            physics = new Physics(600, Width, Height);
+            physics = new Physics(300, Width, Height, 1000);
             physics.StartSimulation();
             timUpdate.Start();
         }
@@ -54,13 +54,28 @@ namespace Gravity
             Graphics g = e.Graphics;
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
+            float center_x = Width / 2;
+            float center_y = Height / 2;
+
             foreach (var item in stars)
             {
-                g.FillEllipse(brush1, (float)item.location.x - 1, (float)item.location.y - 1, 2, 2);
-                g.FillEllipse(brush2, (float)item.location.x - 2, (float)item.location.y - 2, 4, 4);
-                g.FillEllipse(brush3, (float)item.location.x - 4, (float)item.location.y - 4, 8, 8);
-                g.FillEllipse(brush3, (float)item.location.x - 6, (float)item.location.y - 6, 12, 12);
+                if (item.location.z > 20)
+                {
+                    float zoom = 400 / (float)item.location.z;
+                    float x = center_x + (float)(item.location.x * zoom);
+                    float y = center_y + (float)(item.location.y * zoom);
+
+                    Draw_Point(g, brush1, x, y, 3 * zoom);
+                    Draw_Point(g, brush2, x, y, 6 * zoom);
+                    Draw_Point(g, brush3, x, y, 9 * zoom);
+                    Draw_Point(g, brush4, x, y, 12 * zoom);
+                }
             }
+        }
+
+        private void Draw_Point(Graphics g, Brush brush, float x, float y, float size)
+        {
+            g.FillEllipse(brush, x - (size / 2.0f), y - (size / 2.0f), size, size);
         }
 
         private void timUpdate_Tick(object sender, EventArgs e)
