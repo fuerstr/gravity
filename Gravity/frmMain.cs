@@ -12,7 +12,18 @@ namespace Gravity
 {
     public partial class frmMain : Form
     {
+        DateTime lastPaint;
+        int framesPerSecond;
+
+        struct Camera
+        {
+            public Physics.Vector location;
+        }
+
         Physics physics;
+        Camera camera;
+        Point lastMouseLocation;
+        bool run;
 
         Brush brush1;
         Brush brush2;
@@ -33,8 +44,9 @@ namespace Gravity
         {
             Cursor.Hide();
 
-            physics = new Physics(300, Width, Height, 1000);
-            physics.StartSimulation();
+            camera.location.z = -100;
+
+            physics = new Physics(2000, Width, Height, 1000);
             timUpdate.Start();
         }
 
@@ -45,12 +57,31 @@ namespace Gravity
                 case Keys.Escape:
                     Close();
                     break;
+                case Keys.Left:
+                    camera.location.x += 3;
+                    break;
+                case Keys.Right:
+                    camera.location.x -= 3;
+                    break;
+                case Keys.Up:
+                    if (e.Shift) camera.location.z += 3;
+                    else camera.location.y += 3;
+                    break;
+                case Keys.Down:
+                    if (e.Shift) camera.location.z -= 3;
+                    else camera.location.y -= 3;
+                    break;
+                case Keys.Space:
+                    if (run) physics.StopSimulation();
+                    else physics.StartSimulation();
+                    run = !run;
+                    break;
             }
         }
 
         private void frmMain_Paint(object sender, PaintEventArgs e)
         {
-            Physics.star[] stars = physics.Stars;
+            Physics.Star[] stars = physics.Stars;
             Graphics g = e.Graphics;
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
@@ -59,18 +90,27 @@ namespace Gravity
 
             foreach (var item in stars)
             {
-                if (item.location.z > 20)
+                if ((item.location.z - camera.location.z) > 10)
                 {
-                    float zoom = 400 / (float)item.location.z;
-                    float x = center_x + (float)(item.location.x * zoom);
-                    float y = center_y + (float)(item.location.y * zoom);
-
+                    float zoom = 400 / (float)(item.location.z - camera.location.z);
+                    float x = (float)((item.location.x + camera.location.x) * zoom + center_x);
+                    float y = (float)((item.location.y + camera.location.y) * zoom + center_y);
+                    zoom *= 0.3f;
                     Draw_Point(g, brush1, x, y, 3 * zoom);
                     Draw_Point(g, brush2, x, y, 6 * zoom);
                     Draw_Point(g, brush3, x, y, 9 * zoom);
                     Draw_Point(g, brush4, x, y, 12 * zoom);
                 }
             }
+
+            double frameTime = DateTime.Now.Subtract(lastPaint).TotalSeconds;
+            if (frameTime > 1)
+            {
+                framesPerSecond = (int)(physics.Count / frameTime);
+                physics.Count = 0;
+                lastPaint = DateTime.Now;
+            }
+            e.Graphics.DrawString(framesPerSecond.ToString(), Font, Brushes.White, new Point(10, 19));
         }
 
         private void Draw_Point(Graphics g, Brush brush, float x, float y, float size)
@@ -82,5 +122,21 @@ namespace Gravity
         {
             this.Invalidate();
         }
+
+        private void frmMain_MouseDown(object sender, MouseEventArgs e)
+        {
+            lastMouseLocation = e.Location;
+        }
+
+        private void frmMain_MouseMove(object sender, MouseEventArgs e)
+        {
+            if(e.Button == MouseButtons.Left)
+            {
+                camera.location.x += e.Location.X - lastMouseLocation.X;
+                camera.location.y += e.Location.Y - lastMouseLocation.Y;
+                lastMouseLocation = e.Location;
+            }
+        }
+
     }
 }

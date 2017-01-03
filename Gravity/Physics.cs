@@ -9,35 +9,47 @@ namespace Gravity
 {
     public class Physics
     {
-        public struct vector
+        public struct Vector
         {
             public double x;
             public double y;
             public double z;
         }
 
-        public struct star
+        public struct Star
         {
-            public vector location;
-            public vector speed;
+            public Vector location;
+            public Vector speed;
         }
 
-        public star[] Stars { private set; get; }
+        public Star[] Stars { private set; get; }
         Thread thrSimulation;
+
+        public int Count { set; get; }
 
         public Physics(int count, int width, int height, int depth)
         {
             Random rnd = new Random();
-            Stars = new star[count];
+            Stars = new Star[count];
 
             for (int i = 0; i < Stars.Length; i++)
             {
-                Stars[i].location.x = (rnd.NextDouble() - 0.5) * width;
-                Stars[i].location.y = (rnd.NextDouble() - 0.5) * height;
+                double angle = rnd.NextDouble() * Math.PI * 2;
+                double radius = rnd.NextDouble() * Math.Pow(width * 0.5, 2);
+                Stars[i].location.x = Math.Cos(angle) * Math.Sqrt(radius);
+                Stars[i].location.y = Math.Sin(angle) * Math.Sqrt(radius);
                 Stars[i].location.z = rnd.NextDouble() * depth + 200;
 
-                Stars[i].speed.z = 0.00002 * Stars[i].location.x;
-                Stars[i].speed.x = 0.00002 * (Stars[i].location.z - depth / 2 - 100);
+                if (Stars[i].location.x > 0)
+                    Stars[i].speed.y = 0.025 * Math.Sqrt(Stars[i].location.x);
+                else
+                    Stars[i].speed.y = -0.025 * Math.Sqrt(-Stars[i].location.x);
+
+                if (Stars[i].location.y > 0)
+                    Stars[i].speed.x = -0.025 * Math.Sqrt(Stars[i].location.y);
+                else
+                    Stars[i].speed.x = 0.025 * Math.Sqrt(-Stars[i].location.y);
+
             }
         }
 
@@ -46,6 +58,15 @@ namespace Gravity
             thrSimulation = new Thread(RunSimulation);
             thrSimulation.IsBackground = true;
             thrSimulation.Start();
+        }
+
+        public void StopSimulation()
+        {
+            if (thrSimulation != null)
+            {
+                thrSimulation.Abort();
+                thrSimulation = null;
+            }
         }
 
         private void RunSimulation()
@@ -58,6 +79,7 @@ namespace Gravity
 
         private void Calculate_OneStep()
         {
+            Count++;
             unsafe
             {
                 for (int i = 0; i < Stars.Length; i++)
@@ -69,11 +91,11 @@ namespace Gravity
                         double dis_z = (Stars[i].location.z - Stars[j].location.z);
                         double dis2 = dis_x * dis_x + dis_y * dis_y + dis_z * dis_z;
 
-                        if (dis2 > 12)
+                        if (dis2 > 30)
                         {
                             double dis = Math.Sqrt(dis2);
-                            double dis3 = dis2 * dis * 200.0;
-                            vector speed = new vector() { x = dis_x / dis3, y = dis_y / dis3, z = dis_z / dis3 };
+                            double dis3 = dis2 * dis * 1.0;
+                            Vector speed = new Vector() { x = dis_x / dis3, y = dis_y / dis3, z = dis_z / dis3 };
                             Stars[i].speed.x -= speed.x;
                             Stars[i].speed.y -= speed.y;
                             Stars[i].speed.z -= speed.z;
@@ -81,10 +103,10 @@ namespace Gravity
                             Stars[j].speed.y += speed.y;
                             Stars[j].speed.z += speed.z;
                         }
-                        else if (dis2 > 8 && dis2 < 12)
+                        if (dis2 < 2)
                         {
-                            vector speed_i;
-                            vector speed_j;
+                            Vector speed_i;
+                            Vector speed_j;
                             speed_i.x = (Stars[i].speed.x * 19 + Stars[j].speed.x) * 0.05;
                             speed_i.y = (Stars[i].speed.y * 19 + Stars[j].speed.y) * 0.05;
                             speed_i.z = (Stars[i].speed.z * 19 + Stars[j].speed.z) * 0.05;
@@ -94,17 +116,16 @@ namespace Gravity
                             Stars[i].speed = speed_i;
                             Stars[j].speed = speed_j;
                         }
-                        else if (dis2 < 8)
+                        if (dis2 < 10)
                         {
-                            double speed_x = dis_x * 0.01;
-                            double speed_y = dis_y * 0.01;
-                            double speed_z = dis_z * 0.01;
-                            Stars[i].speed.x += speed_x;
-                            Stars[i].speed.y += speed_y;
-                            Stars[i].speed.z += speed_z;
-                            Stars[j].speed.x -= speed_x;
-                            Stars[j].speed.y -= speed_y;
-                            Stars[j].speed.z -= speed_z;
+                            double dis3 = 100;
+                            Vector speed = new Vector() { x = dis_x / dis3, y = dis_y / dis3, z = dis_z / dis3 };
+                            Stars[i].speed.x += speed.x;
+                            Stars[i].speed.y += speed.y;
+                            Stars[i].speed.z += speed.z;
+                            Stars[j].speed.x -= speed.x;
+                            Stars[j].speed.y -= speed.y;
+                            Stars[j].speed.z -= speed.z;
                         }
                     }
                 }

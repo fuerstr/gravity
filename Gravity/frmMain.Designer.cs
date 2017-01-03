@@ -34,7 +34,7 @@
             // 
             // timUpdate
             // 
-            this.timUpdate.Interval = 16;
+            this.timUpdate.Interval = 20;
             this.timUpdate.Tick += new System.EventHandler(this.timUpdate_Tick);
             // 
             // frmMain
@@ -51,6 +51,8 @@
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.frmMain_Paint);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.frmMain_KeyDown);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseDown);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseMove);
             this.ResumeLayout(false);
 
         }
